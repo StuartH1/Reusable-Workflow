@@ -4,34 +4,24 @@ on:
   workflow_call:
     inputs:
       message:
-        description: "Message"
+        description: "Message to be sent as a notification"
         required: true
         type: string
-    outputs:
-      firstword:
-        description: "The first output string"
-        value: ${{ jobs.ping.outputs.firstword }}
 
 jobs:
   ping:
     runs-on: ubuntu-20.04
-    outputs:
-      firstword: ${{ steps.extract_first_word.outputs.firstword }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Extract First Word
-        id: extract_first_word
-        run: |
-          FIRST_WORD=$(echo "${{ inputs.message }}" | awk '{print $1}')
-          echo "firstword=$FIRST_WORD" >> $GITHUB_OUTPUT
+      - name: Debug Message
+        run: echo "Message to send: ${{ inputs.message }}"
 
       - name: Send Notification
         env:
           SLACK_URL: ${{ secrets.SLACK_DM_URL }}
           MESSAGE: ${{ inputs.message }}
         run: |
-          # Send notification to Slack
           curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$MESSAGE"'"}' $SLACK_URL
