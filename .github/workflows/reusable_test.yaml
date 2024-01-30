@@ -17,7 +17,8 @@ jobs:
           fetch-depth: 0
 
       - name: Debug Message
-        run: echo "Message to send: ${{ inputs.message }}"
+        run: |
+          echo "Message to send: ${{ inputs.message }}"
 
       - name: Send Notification
         env:
