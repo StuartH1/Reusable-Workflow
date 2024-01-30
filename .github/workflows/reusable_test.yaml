@@ -1,0 +1,25 @@
+name: Reusable Ping Workflow
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: "Message"
+        required: true
+        type: string
+
+jobs:
+  ping:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Send Notification
+        env:
+          SLACK_URL: ${{ secrets.SLACK_DM_URL }}
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          # Send notification to Slack
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"$MESSAGE"}' $SLACK_URL
