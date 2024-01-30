@@ -26,4 +26,4 @@ jobs:
           MESSAGE: ${{ inputs.message }}
         run: |
           # Send notification to Slack
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"$MESSAGE"}' $SLACK_URL
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"'"$MESSAGE"'"}' $SLACK_URL
