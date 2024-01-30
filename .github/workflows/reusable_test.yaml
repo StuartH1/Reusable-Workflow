@@ -2,23 +2,31 @@ name: Reusable Ping Workflow
 
 on:
   workflow_call:
-    outputs:
-      firstword:
-        description: "The first output string"
-        value: ${{ jobs.Message.outputs.message }}
     inputs:
       message:
         description: "Message"
         required: true
         type: string
+    outputs:
+      firstword:
+        description: "The first output string"
+        value: ${{ jobs.ping.outputs.firstword }}
 
 jobs:
   ping:
     runs-on: ubuntu-20.04
+    outputs:
+      firstword: ${{ steps.extract_first_word.outputs.firstword }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Extract First Word
+        id: extract_first_word
+        run: |
+          FIRST_WORD=$(echo "${{ inputs.message }}" | awk '{print $1}')
+          echo "firstword=$FIRST_WORD" >> $GITHUB_OUTPUT
 
       - name: Send Notification
         env:
