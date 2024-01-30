@@ -2,6 +2,10 @@ name: Reusable Ping Workflow
 
 on:
   workflow_call:
+    outputs:
+      firstword:
+        description: "The first output string"
+        value: ${{ jobs.Message.outputs.message }}
     inputs:
       message:
         description: "Message"
@@ -19,7 +23,7 @@ jobs:
       - name: Send Notification
         env:
           SLACK_URL: ${{ secrets.SLACK_DM_URL }}
-          # MESSAGE: ${{ inputs.message }}
+          MESSAGE: ${{ inputs.message }}
         run: |
           # Send notification to Slack
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"${{ inputs.message }}"}' $SLACK_URL
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"$MESSAGE"}' $SLACK_URL
