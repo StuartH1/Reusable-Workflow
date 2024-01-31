@@ -8,7 +8,7 @@ on:
 jobs:
   format-and-lint:
     name: Formatting & Linting
-    if: contains(github.head_ref, 'hotfix')
+    if: ${{ !contains(github.head_ref, 'hotfix') }}
     runs-on: ubuntu-20.04
     steps:
       - name: "Checkout repository: ${{ github.repository }}"
