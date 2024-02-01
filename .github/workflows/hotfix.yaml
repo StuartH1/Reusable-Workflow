@@ -25,6 +25,7 @@ jobs:
 
     auto-approve:
       runs-on: ubuntu-latest
+      needs: check-label
       if: contains(github.event.pull_request.labels.*.name, 'HOTFIX') && github.event.pull_request.draft == false
       steps:
         - name: Auto-approve
