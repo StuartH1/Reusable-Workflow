@@ -8,6 +8,21 @@ on:
 
 
 jobs:
+    check-label:
+      runs-on: ubuntu-latest
+      if: ${{ contains(github.head_ref, 'hotfix') }}
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Add HOTFIX label
+        run: |
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+          --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          --header 'Content-Type: application/json' \
+          --data '{"labels": ["HOTFIX"]}'
+
     auto-approve:
       runs-on: ubuntu-latest
       if: contains(github.event.pull_request.labels.*.name, 'HOTFIX') && github.event.pull_request.draft == false
