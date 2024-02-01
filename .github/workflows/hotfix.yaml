@@ -8,13 +8,11 @@ on:
 
 
 jobs:
-  CheckLabel:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check labels for hotfix
-        id: Check-label
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: contains(join(github.event.pull_request.labels.*.name, ','), 'HOTFIX')
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --required-approving-review-count 0
+    auto-approve:
+      runs-on: ubuntu-latest
+      if: contains(github.event.pull_request.labels.*.name, 'HOTFIX') && github.event.pull_request.draft == false
+      steps:
+        - name: Auto-approve
+          uses: hmarr/auto-approve-action@v2
+          with:
+            github-token: "${{ secrets.GITHUB_TOKEN }}"
