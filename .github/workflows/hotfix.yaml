@@ -15,6 +15,6 @@ jobs:
         id: Check-label
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: contains(github.event.issue.labels.*.name,'HOTFIX' )
+        if: contains(github.event.pull_request.labels,'HOTFIX' )
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --required-approving-review-count 0
