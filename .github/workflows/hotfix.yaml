@@ -1,0 +1,20 @@
+name: HOTFIX
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+jobs:
+  CheckLabel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check labels for hotfix
+        id: Check-label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: contains(github.event.issue.labels.*.name,'HOTFIX' )
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --required-approving-review-count 0

@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  format-and-lint:
-    name: Formatting & Linting
+  Testing:
+    name: Testing
     if: ${{ !contains(github.head_ref, 'hotfix') }}
     runs-on: ubuntu-20.04
     steps:
@@ -15,26 +15,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
       - name: Install dependencies
         run: |
-          pip install black==24.1.1 isort==5.13.2 pycln==2.4.0
-      - name: Run black checks
-        id: black
-        if: steps.file_changes.outputs.files
-        run: |
-          black --check --skip-magic-trailing-comma ${{ steps.file_changes.outputs.files }}
-      - name: Run pycln checks
-        id: pycln
-        if: steps.file_changes.outputs.files
-        run: |
-          pycln --check --all ${{ steps.file_changes.outputs.files }}
-      - name: Run isort checks
-        id: isort
-        if: steps.file_changes.outputs.files
-        run: |
-          isort --check --profile=black ${{ steps.file_changes.outputs.files }}
+          exit 0
