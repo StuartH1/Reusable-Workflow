@@ -11,13 +11,13 @@ jobs:
     check-label:
       runs-on: ubuntu-latest
       if: contains(github.head_ref, 'hotfix')
-      outputs:
-        label_added: ${{ steps.add_label.outputs.label_added }}
+
       steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Add HOTFIX label
+        id: add_label
         run: |
           curl --request POST \
           --url https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
@@ -26,15 +26,17 @@ jobs:
           --data '{"labels": ["HOTFIX"]}'
           echo "label_added=true" >> $GITHUB_OUTPUT 
 
+      outputs:
+        label_added: ${{ steps.add_label.outputs.label_added }}
+
     check-ouputs:
       runs-on: ubuntu-latest
       needs: check-label
       steps:
       - name: check output
         run: |
-          echo "${{ needs.check-label.outputs.label_added  }}"
+          echo "${{ needs.check-label.outputs.label_added }}"
           echo "${{ github.event.pull_request.labels.*.name }}"
-
 
 
     auto-approve:
