@@ -8,7 +8,7 @@ on:
 jobs:
   Testing:
     name: Testing
-    if: ${{ github.actor != 'dependabot[bot]' }} && ${{ !contains(github.head_ref, 'hotfix') }}
+    if: github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'hotfix')
     runs-on: ubuntu-20.04
     steps:
       - name: "Checkout repository: ${{ github.repository }}"
