@@ -1,25 +1,24 @@
 name: Reusable Ping Workflow
 
 on:
-  workflow_dispatch:  # Allows manual triggering of the workflow
+  workflow_dispatch:  
   schedule:
-    - cron: "0 12 * * *"  # Runs at 12:00 UTC every day
+    - cron: "0 12 * * *" 
 
 jobs:
   pr-update:
     runs-on: ubuntu-20.04
     outputs:
-      prDetails: ${{ steps.get-prs.outputs.prDetails }}  # Define the output at the job level
+      prDetails: ${{ steps.get-prs.outputs.prDetails }}  
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Fetches all history for all branches and tags
+      - name: Call Slack Notification Workflow
+        uses: ./.github/workflows/daily_pr_update.yml@main  
 
       - name: Get open PRs
         id: get-prs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the GITHUB_TOKEN secret for authentication
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
           script: |
             const core = require('@actions/core');
             const dayInMillis = 24 * 60 * 60 * 1000;
