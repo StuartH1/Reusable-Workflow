@@ -6,11 +6,11 @@ on:
       - main
   workflow_dispatch:
 
-
+#test 2
 jobs:
     check-label:
       runs-on: ubuntu-latest
-      if: contains(github.head_ref, 'hotfix')
+      if: startsWith(github.head_ref, 'hotfix') && !contains(github.event.pull_request.labels.*.name, 'hotfix')
 
       steps:
       - name: Checkout code
@@ -36,7 +36,6 @@ jobs:
       - name: check output
         run: |
           echo "${{ needs.check-label.outputs.label_added }}"
-          echo "${{ github.event.pull_request.labels.*.name }}"
 
 
     auto-approve:

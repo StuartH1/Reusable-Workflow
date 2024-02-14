@@ -1,0 +1,35 @@
+name: Reusable Ping Workflow
+
+on:
+  workflow_dispatch:  
+  schedule:
+    - cron: "0 12 * * *" 
+
+jobs:
+  pr-update:
+    runs-on: ubuntu-20.04
+    outputs:
+      prDetails: ${{ steps.get-prs.outputs.prDetails }}  
+    steps:
+      - name: Call Slack Notification Workflow
+        uses: ./.github/workflows/daily_pr_update.yml@main  
+
+      - name: Get open PRs
+        id: get-prs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          script: |
+            const core = require('@actions/core');
+            const dayInMillis = 24 * 60 * 60 * 1000;
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const prDetails = prs.data.map(pr => {
+              const ageInDays = Math.round((new Date() - new Date(pr.created_at)) / dayInMillis);
+              return `- PR [#${pr.number}](${pr.html_url}) is ${ageInDays} days old.`;  # Format PR details
+            }).join('\n');
+            
+            core.setOutput("prDetails", prDetails);
