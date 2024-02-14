@@ -1,24 +1,20 @@
 name: Reusable daily recap Ping Workflow
 
 on:
-  workflow_dispatch:  
+  workflow_dispatch: null
   schedule:
-    - cron: "0 12 * * *" 
-
+    - cron: 0 12 * * *
 jobs:
-  call-reusable-workflow:
-    uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
-  pr-update:
+  pr-details:
     runs-on: ubuntu-20.04
     outputs:
-      prDetails: ${{ steps.get-prs.outputs.prDetails }}  
+      prDetails: '${{ steps.get-prs.outputs.prDetails }}'
     steps:
-        
       - name: Get open PRs
         id: get-prs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }} 
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |
             const core = require('@actions/core');
             const dayInMillis = 24 * 60 * 60 * 1000;
@@ -31,5 +27,13 @@ jobs:
               const ageInDays = Math.round((new Date() - new Date(pr.created_at)) / dayInMillis);
               return `- PR [#${pr.number}](${pr.html_url}) is ${ageInDays} days old.`;  # Format PR details
             }).join('\n');
-            
             core.setOutput("prDetails", prDetails);
+
+  call-reusable-workflow:
+    runs-on: ubuntu-20.04
+    needs: pr-details
+    steps:
+      - name: call workflow
+        uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
+        with:
+          prDetails: '${{ needs.pr-update.outputs.prDetails }}'
