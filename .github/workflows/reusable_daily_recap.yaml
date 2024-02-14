@@ -35,3 +35,4 @@ jobs:
     uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
     with:
       prDetails: ${{ needs.pr-details.outputs.prDetails }}
+    secrets: inherit
