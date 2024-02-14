@@ -17,7 +17,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const core = require('@actions/core');
             const dayInMillis = 24 * 60 * 60 * 1000;
             const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -26,8 +25,9 @@ jobs:
             });
             const prDetails = prs.data.map(pr => {
               const ageInDays = Math.round((new Date() - new Date(pr.created_at)) / dayInMillis);
-              return `- PR [#${pr.number}](${pr.html_url}) is ${ageInDays} days old.`;  # Format PR details
+              return `- PR [#${pr.number}](${pr.html_url}) is ${ageInDays} days old.`;  // Use JavaScript line comment syntax
             }).join('\n');
+
             core.setOutput("prDetails", prDetails);
 
   call-reusable-workflow:
