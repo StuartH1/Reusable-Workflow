@@ -12,7 +12,7 @@ jobs:
       prDetails: ${{ steps.get-prs.outputs.prDetails }}  
     steps:
       - name: Call Slack Notification Workflow
-        uses: ./.github/workflows/daily_pr_update.yml@main  
+        uses: /testing-reusable-workflow/.github/workflows/daily-recap.yaml
 
       - name: Get open PRs
         id: get-prs
