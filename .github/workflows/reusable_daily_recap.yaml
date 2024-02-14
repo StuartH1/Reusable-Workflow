@@ -1,4 +1,4 @@
-name: Reusable Ping Workflow
+name: Reusable daily recap Ping Workflow
 
 on:
   workflow_dispatch:  
