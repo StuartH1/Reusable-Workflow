@@ -1,0 +1,36 @@
+name: Reusable Ping Workflow
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+  schedule:
+    - cron: "0 12 * * *"  # Runs at 12:00 UTC every day
+
+jobs:
+  pr-update:
+    runs-on: ubuntu-20.04
+    outputs:
+      prDetails: ${{ steps.get-prs.outputs.prDetails }}  # Define the output at the job level
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetches all history for all branches and tags
+
+      - name: Get open PRs
+        id: get-prs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the GITHUB_TOKEN secret for authentication
+          script: |
+            const core = require('@actions/core');
+            const dayInMillis = 24 * 60 * 60 * 1000;
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const prDetails = prs.data.map(pr => {
+              const ageInDays = Math.round((new Date() - new Date(pr.created_at)) / dayInMillis);
+              return `- PR [#${pr.number}](${pr.html_url}) is ${ageInDays} days old.`;  # Format PR details
+            }).join('\n');
+            
+            core.setOutput("prDetails", prDetails);
