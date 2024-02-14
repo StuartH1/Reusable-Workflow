@@ -6,14 +6,14 @@ on:
     - cron: "0 12 * * *" 
 
 jobs:
+  call-reusable-workflow:
+    uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
   pr-update:
     runs-on: ubuntu-20.04
     outputs:
       prDetails: ${{ steps.get-prs.outputs.prDetails }}  
     steps:
-      - name: Call Slack Notification Workflow
-        uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
-
+        
       - name: Get open PRs
         id: get-prs
         uses: actions/github-script@v6
