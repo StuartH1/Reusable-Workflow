@@ -8,13 +8,13 @@ jobs:
   pr-details:
     runs-on: ubuntu-20.04
     outputs:
-      prDetails: '${{ steps.get-prs.outputs.prDetails }}'
+      prDetails: "${{ steps.get-prs.outputs.prDetails }}"
     steps:
       - name: Get open PRs
         id: get-prs
         uses: actions/github-script@v6
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
             const core = require('@actions/core');
             const dayInMillis = 24 * 60 * 60 * 1000;
@@ -36,4 +36,4 @@ jobs:
       - name: call workflow
         uses: stuartH1/testing-reusable-workflow/.github/workflows/daily-recap.yaml@main
         with:
-          prDetails: '${{ needs.pr-update.outputs.prDetails }}'
+          prDetails: "${{ needs.pr-update.outputs.prDetails }}"
