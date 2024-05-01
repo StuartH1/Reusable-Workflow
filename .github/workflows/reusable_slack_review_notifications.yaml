@@ -50,7 +50,6 @@ jobs:
 
           # Define mapping from GitHub username to Slack user ID
           user_map = {
-              'cbradl01': 'U02LL8QLL1X',
               'StuartH1': 'U067BG3JC1K',
               'jake94a': 'U03CVABRQNN',
           }
