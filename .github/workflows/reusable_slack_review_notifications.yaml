@@ -6,6 +6,9 @@ on:
       pull_request_number:
         required: true
         type: string
+      codeowners_path:
+        required: false
+        type: string
 
 concurrency:
   group: pr-${{ inputs.pull_request_number }}-${{ github.workflow }}
@@ -23,7 +26,7 @@ jobs:
         id: codeowner
         uses: SvanBoxel/codeowners-action@v1
         with:
-          path: "./.github/CODEOWNERS"
+          path: ${{ inputs.codeowners_path }}
 
       - name: get_owner
         id: get_pr
