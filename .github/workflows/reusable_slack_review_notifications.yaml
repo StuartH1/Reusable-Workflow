@@ -58,7 +58,7 @@ jobs:
           mentions = ' '.join([f"<@{user_map[reviewer['login']]}>"
                                for reviewer in reviewers
                                if reviewer['login'] in user_map])
-
+          print(mentions)
           # Construct the payload to send to Slack
           message = f"{mentions} *{os.getenv('GITHUB_ACTOR')}* requested your review on <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
           payload = {
