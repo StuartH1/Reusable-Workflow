@@ -1,0 +1,72 @@
+name: Reusable Slack Review Notifications Workflow
+
+on:
+  workflow_call:
+    inputs:
+      pull_request_number:
+        required: true
+        type: string
+
+concurrency:
+  group: pr-${{ inputs.pull_request_number }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  send_notification:
+    name: Ping Reviewer(s)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delay Step
+        run: sleep 20 # Delays for 20 seconds
+
+      - name: Get Current PR
+        id: get_pr
+        uses: 8BitJonny/gh-get-current-pr@3.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ github.event.pull_request.head.sha }}
+
+      - name: Send Slack Notification
+        if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DM_URL }}
+          PR_OBJECT: ${{ steps.get_pr.outputs.pr }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          PR_URL: ${{ steps.get_pr.outputs.pr_url }}
+          PR_NUMBER: ${{ steps.get_pr.outputs.number }}
+        shell: python
+        run: |
+          import os, json, requests
+
+          # Parse the PR object from the environment variable
+          pr_object = json.loads(os.getenv('PR_OBJECT'))
+
+          # Extract requested reviewers
+          reviewers = pr_object.get('requested_reviewers', [])
+
+          # # Load reviewer JSON data from environment variable
+          # reviewers_json = os.getenv('REVIEWERS_JSON')
+          # reviewers = json.loads(reviewers_json)
+
+          # Define mapping from GitHub username to Slack user ID
+          user_map = {
+              'cbradl01': 'U02LL8QLL1X',
+              'StuartH1': 'U067BG3JC1K',
+              'jake94a': 'U03CVABRQNN',
+          }
+
+          # Loop over each requested reviewer to construct the "mentions" string
+          mentions = ' '.join([f"<@{user_map[reviewer['login']]}>"
+                               for reviewer in reviewers
+                               if reviewer['login'] in user_map])
+
+          # Construct the payload to send to Slack
+          message = f"{mentions} *{os.getenv('GITHUB_ACTOR')}* requested your review on <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+          payload = {
+              'text': message,
+              'username': 'GitHub Actions',
+              'icon_emoji': ':octocat:',
+          }
+
+          # Ping the Slack user in the "developer_notifications" channel
+          requests.post(os.getenv('SLACK_WEBHOOK_URL'), json=payload)
