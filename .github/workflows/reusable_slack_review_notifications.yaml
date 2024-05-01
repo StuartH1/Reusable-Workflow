@@ -19,7 +19,13 @@ jobs:
       - name: Delay Step
         run: sleep 20 # Delays for 20 seconds
 
-      - name: Get Current PR
+      - name: Get Owner
+        id: get_owner
+        uses: SvanBoxel/codeowners-action@v1
+        run: |
+          echo ${{ steps.get_owner.outputs.get_owner }};
+
+      - name: get_owner
         id: get_pr
         uses: 8BitJonny/gh-get-current-pr@3.0.0
         with:
