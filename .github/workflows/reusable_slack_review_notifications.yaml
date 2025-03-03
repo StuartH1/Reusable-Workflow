@@ -27,7 +27,7 @@ jobs:
       - name: Send Slack Notification
         if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
         env:
-          SLACK_J_DM_URL: ${{ secrets.SLACK_J_DM_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_J_DM_URL }}
           PR_OBJECT: ${{ steps.get_pr.outputs.pr }}
           GITHUB_ACTOR: ${{ github.actor }}
           PR_URL: ${{ steps.get_pr.outputs.pr_url }}
@@ -76,7 +76,7 @@ jobs:
                   'username': 'GitHub Actions',
                   'icon_emoji': ':octocat:',
               }
-              webhook_url = os.getenv('SLACK_J_DM_URL')
+              webhook_url = os.getenv('SLACK_WEBHOOK_URL')
               if webhook_url:
                   requests.post(webhook_url, json=payload)
 
