@@ -39,154 +39,57 @@ jobs:
         shell: python
         run: |
           import os, json, requests
-          # Removing unused imports
-          # from datetime import datetime, timedelta
 
-          ###########################################
-          # Setup and Environment Variable Parsing
-          ###########################################
-          
-          # Parse basic environment variables
-          pr_object = json.loads(os.getenv('PR_OBJECT', '{}'))
-          event_name = os.getenv('GITHUB_EVENT_NAME')
-          event_action = os.getenv('GITHUB_EVENT_ACTION')
-          actor = os.getenv('GITHUB_ACTOR')
-          pr_url = os.getenv('PR_URL')
-          pr_number = os.getenv('PR_NUMBER')
+          # Parse the PR object from the environment variable
+          pr_object = json.loads(os.getenv('PR_OBJECT'))
 
-          ###########################################
-          # User Mapping Configuration
-          ###########################################
-          
-          # Mapping from GitHub username to Slack user ID
+          # Extract requested reviewers
+          reviewers = pr_object.get('requested_reviewers', [])
+
+          # Extract PR author
+          pr_author = pr_object.get('user', {}).get('login')
+
+          # # Load reviewer JSON data from environment variable
+          # reviewers_json = os.getenv('REVIEWERS_JSON')
+          # reviewers = json.loads(reviewers_json)
+
+          # Define mapping from GitHub username to Slack user ID
           user_map = {
               'StuartH1': 'U067BG3JC1K',
               'jake94a': 'U03CVABRQNN',
-              'zenzenzen': 'U04119RP19C',
+              'zenzenzen': 'U04119RP19C'
           }
 
-          ###########################################
-          # Helper Functions
-          ###########################################
+          # Loop over each requested reviewer to construct the "mentions" string
+          mentions = ' '.join([f"<@{user_map[reviewer['login']]}>"
+                               for reviewer in reviewers
+                               if reviewer['login'] in user_map])
+          print("Mentions: ", mentions) 
+
+          # Get author's Slack ID if available
+          author_mention = f"<@{user_map[pr_author]}>" if pr_author in user_map else pr_author
           
-          def send_slack(message: str) -> None:
-              """Send a message to the configured Slack webhook."""
-              payload = {
-                  'text': message,
-                  'username': 'GitHub Actions',
-                  'icon_emoji': ':octocat:',
-              }
-              webhook_url = os.getenv('SLACK_WEBHOOK_URL')
-              if webhook_url:
-                  requests.post(webhook_url, json=payload)
-
-          notification_sent = False
-
-          ###########################################
-          # Review Request Event Handler
-          ###########################################
+          # Determine notification type and construct appropriate message
+          notification_type = os.getenv('NOTIFICATION_TYPE', 'review_request')
           
-          if event_name == 'pull_request' and event_action == 'review_requested':
-              reviewers = pr_object.get('requested_reviewers', [])
-              
-              ###########################################
-              # Enhanced Notification for Addressed Changes
-              ###########################################
-              
-              # Optionally attempt to enhance notifications if a GitHub token is available.
-              github_token = os.getenv('GITHUB_TOKEN', '')
-              # GITHUB_REPOSITORY is automatically available on the runner.
-              repo = os.getenv('GITHUB_REPOSITORY', '')
-              
-              if github_token and repo and pr_number:
-                  try:
-                      # Fetch review history to check if this is a re-review after changes requested
-                      api_headers = {
-                          'Authorization': f'token {github_token}',
-                          'Accept': 'application/vnd.github.v3+json'
-                      }
-                      reviews_url = f'https://api.github.com/repos/{repo}/pulls/{pr_number}/reviews'
-                      reviews_response = requests.get(reviews_url, headers=api_headers)
-                      
-                      if reviews_response.status_code == 200:
-                          reviews = reviews_response.json()
-                          
-                          # Group reviews by reviewer for easier processing
-                          reviewer_history = {}
-                          for review in reviews:
-                              login = review.get('user', {}).get('login')
-                              if login:
-                                  reviewer_history.setdefault(login, []).append(review)
-                          
-                          # Identify reviewers who previously requested changes
-                          changes_addressed_reviewers = []
-                          for reviewer in reviewers:
-                              login = reviewer.get('login')
-                              if login in reviewer_history:
-                                  # Get the most recent review for this user.
-                                  last_review = sorted(
-                                      reviewer_history[login],
-                                      key=lambda r: r.get('submitted_at', ''),
-                                      reverse=True
-                                  )[0]
-                                  if last_review.get('state') == 'CHANGES_REQUESTED':
-                                      changes_addressed_reviewers.append(login)
-                          
-                          # Send notification for addressed changes
-                          if changes_addressed_reviewers:
-                              mentions = ' '.join(
-                                  f"<@{user_map[login]}>" for login in changes_addressed_reviewers if login in user_map
-                              )
-                              if mentions:
-                                  message = f"{mentions} *{actor}* has addressed your requested changes and re-requested your review on <{pr_url}|PR #{pr_number}>."
-                                  send_slack(message)
-                                  notification_sent = True
-                  except Exception as e:
-                      print(f"Error fetching review history: {e}")
-
-              ###########################################
-              # Standard Review Request Notification
-              ###########################################
-              
-              # If no enhanced notification was sent, send the default review request message.
-              if not notification_sent:
-                  mentions = ' '.join(
-                      f"<@{user_map[reviewer.get('login')]}>" for reviewer in reviewers if reviewer.get('login') in user_map
-                  )
-                  if mentions:
-                      message = f"{mentions} *{actor}* requested your review on <{pr_url}|PR #{pr_number}>."
-                      send_slack(message)
-
-          ###########################################
-          # Changes Requested Event Handler
-          ###########################################
+          if notification_type == 'review_request':
+              # Original review request notification
+              message = f"{mentions} *{os.getenv('GITHUB_ACTOR')}* requested your review on <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+          elif notification_type == 'pr_comment':
+              # New comment notification for PR author
+              comment_author = os.getenv('COMMENT_AUTHOR')
+              message = f"{author_mention} *{comment_author}* commented on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+          elif notification_type == 'changes_requested':
+              # Changes requested notification for PR author
+              reviewer = os.getenv('REVIEWER')
+              message = f"{author_mention} *{reviewer}* requested changes on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
           
-          elif event_name == 'pull_request_review' and event_action == 'submitted':
-              review_state = os.getenv('GITHUB_EVENT_REVIEW_STATE', '')
-              reviewer = actor
-              
-              # Notify PR author when changes are requested
-              if review_state.lower() == 'changes_requested':
-                  pr_author = pr_object.get('user', {}).get('login')
-                  if pr_author in user_map:
-                      message = f"<@{user_map[pr_author]}> *{reviewer}* requested changes on <{pr_url}|PR #{pr_number}>."
-                      send_slack(message)
-              # Also notify for other review types (approved, commented)
-              else:
-                  pr_author = pr_object.get('user', {}).get('login')
-                  if pr_author in user_map:
-                      message = f"<@{user_map[pr_author]}> *{reviewer}* submitted a review ({review_state.lower()}) on <{pr_url}|PR #{pr_number}>."
-                      send_slack(message)
+          # Construct the payload to send to Slack
+          payload = {
+              'text': message,
+              'username': 'GitHub Actions',
+              'icon_emoji': ':octocat:',
+          }
 
-          ###########################################
-          # PR Comment Event Handler
-          ###########################################
-          
-          elif event_name == 'pull_request_review_comment' and event_action == 'created':
-              commenter = actor
-              pr_author = pr_object.get('user', {}).get('login')
-              
-              # Notify PR author of new comments (including their own comments)
-              if pr_author in user_map:
-                  message = f"<@{user_map[pr_author]}> *{commenter}* commented on <{pr_url}|PR #{pr_number}>."
-                  send_slack(message)
+          # Send notification to Slack
+          requests.post(os.getenv('SLACK_WEBHOOK_URL'), json=payload)
