@@ -127,6 +127,7 @@ jobs:
               # For issue comments, we don't have the PR author directly
               # We'll send a more generic message
               issue_number = os.getenv('ISSUE_NUMBER')
+              # Use proper Slack hyperlinking format: <url|text>
               message = f"*{actor}* commented on PR conversation in <{pr_url}|PR #{issue_number}>."
           
           # Only send notification if we have a message to send
