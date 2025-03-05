@@ -42,10 +42,10 @@ jobs:
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_OBJECT: ${{ toJSON(github.event.issue) }}
         shell: python
         run: |
-          import os, json, requests
+          import os, json, requests, re
 
           event_name = os.getenv('GITHUB_EVENT_NAME')
           event_action = os.getenv('GITHUB_EVENT_ACTION')
@@ -56,6 +56,8 @@ jobs:
           reviewers = []
           mentions = ""
           author_mention = ""
+          pr_url = os.getenv('PR_URL')
+          pr_number = os.getenv('PR_NUMBER')
           
           # Only try to parse PR_OBJECT if it's not an issue_comment event or if PR_OBJECT is not empty
           if event_name != 'issue_comment' and os.getenv('PR_OBJECT'):
@@ -71,10 +73,24 @@ jobs:
               except json.JSONDecodeError:
                   print("Warning: Could not decode PR_OBJECT JSON")
           elif event_name == 'issue_comment':
-              # For issue comments, we need to handle differently
-              # The PR author information might be available in the issue object
-              # We'll use the PR_URL and PR_NUMBER directly from the environment
-              pass
+              # For issue comments, extract information from the issue object
+              try:
+                  issue_object = json.loads(os.getenv('ISSUE_OBJECT'))
+                  
+                  # Check if this is a PR (issues with pull_request property are PRs)
+                  if 'pull_request' in issue_object:
+                      # Extract PR URL from the issue object
+                      pr_url = issue_object['pull_request']['html_url']
+                      
+                      # Extract PR number from the issue object
+                      pr_number = issue_object['number']
+                      
+                      # Optionally, extract the PR author if available
+                      pr_author = issue_object.get('user', {}).get('login')
+                  else:
+                      print("This is a regular issue comment, not a PR comment")
+              except (json.JSONDecodeError, KeyError) as e:
+                  print(f"Warning: Could not process issue object: {e}")
           
           # Define mapping from GitHub username to Slack user ID
           user_map = {
@@ -98,10 +114,6 @@ jobs:
           if pr_author:
               author_mention = f"<@{user_map[pr_author]}>" if pr_author in user_map else pr_author
           
-          # Get PR URL and number
-          pr_url = os.getenv('PR_URL')
-          pr_number = os.getenv('PR_NUMBER')
-          
           message = ""
           
           if event_name == 'pull_request' and event_action == 'review_requested':
@@ -124,11 +136,12 @@ jobs:
                   message = f"{author_mention} *{actor}* reviewed and commented on your <{pr_url}|PR #{pr_number}>."
           
           elif event_name == 'issue_comment' and event_action == 'created':
-              # For issue comments, we don't have the PR author directly
-              # We'll send a more generic message
-              issue_number = os.getenv('ISSUE_NUMBER')
-              # Use proper Slack hyperlinking format: <url|text>
-              message = f"*{actor}* commented on PR conversation in <{pr_url}|PR #{issue_number}>."
+              # For issue comments, we can now use the PR author if available
+              if pr_author and pr_author in user_map:
+                  message = f"{author_mention} *{actor}* commented on your PR conversation in <{pr_url}|PR #{pr_number}>."
+              else:
+                  # Generic message if we don't have the author
+                  message = f"*{actor}* commented on PR conversation in <{pr_url}|PR #{pr_number}>."
           
           # Only send notification if we have a message to send
           if message:
