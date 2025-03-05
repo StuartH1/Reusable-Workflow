@@ -42,64 +42,92 @@ jobs:
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         shell: python
         run: |
           import os, json, requests
 
-          # Parse the PR object from the environment variable
-          pr_object = json.loads(os.getenv('PR_OBJECT'))
-
-          # Extract requested reviewers
-          reviewers = pr_object.get('requested_reviewers', [])
-
-          # Extract PR author
-          pr_author = pr_object.get('user', {}).get('login')
-
+          event_name = os.getenv('GITHUB_EVENT_NAME')
+          event_action = os.getenv('GITHUB_EVENT_ACTION')
+          review_state = os.getenv('GITHUB_EVENT_REVIEW_STATE')
+          
+          # Initialize variables
+          pr_author = None
+          reviewers = []
+          mentions = ""
+          author_mention = ""
+          
+          # Only try to parse PR_OBJECT if it's not an issue_comment event or if PR_OBJECT is not empty
+          if event_name != 'issue_comment' and os.getenv('PR_OBJECT'):
+              try:
+                  # Parse the PR object from the environment variable
+                  pr_object = json.loads(os.getenv('PR_OBJECT'))
+                  
+                  # Extract requested reviewers
+                  reviewers = pr_object.get('requested_reviewers', [])
+                  
+                  # Extract PR author
+                  pr_author = pr_object.get('user', {}).get('login')
+              except json.JSONDecodeError:
+                  print("Warning: Could not decode PR_OBJECT JSON")
+          elif event_name == 'issue_comment':
+              # For issue comments, we need to handle differently
+              # The PR author information might be available in the issue object
+              # We'll use the PR_URL and PR_NUMBER directly from the environment
+              pass
+          
           # Define mapping from GitHub username to Slack user ID
           user_map = {
               'StuartH1': 'U067BG3JC1K',
               'jake94a': 'U03CVABRQNN',
               'zenzenzen': 'U04119RP19C'
           }
-
-          # Construct mentions for reviewers
-          mentions = ' '.join([f"<@{user_map[reviewer['login']]}>"
-                               for reviewer in reviewers
-                               if reviewer['login'] in user_map])
-          print("Mentions: ", mentions) 
-
-          # Get author's Slack ID if available
-          author_mention = f"<@{user_map[pr_author]}>" if pr_author in user_map else pr_author
           
-          # Determine notification type based on GitHub event
-          event_name = os.getenv('GITHUB_EVENT_NAME')
-          event_action = os.getenv('GITHUB_EVENT_ACTION')
-          review_state = os.getenv('GITHUB_EVENT_REVIEW_STATE')
+          # Get GitHub actor's Slack ID if available
+          actor = os.getenv('GITHUB_ACTOR')
+          actor_mention = f"<@{user_map[actor]}>" if actor in user_map else actor
+          
+          # Construct mentions for reviewers if we have reviewer information
+          if reviewers:
+              mentions = ' '.join([f"<@{user_map[reviewer['login']]}>"
+                                 for reviewer in reviewers
+                                 if reviewer['login'] in user_map])
+              print("Mentions: ", mentions)
+          
+          # Get author's Slack ID if available
+          if pr_author:
+              author_mention = f"<@{user_map[pr_author]}>" if pr_author in user_map else pr_author
+          
+          # Get PR URL and number
+          pr_url = os.getenv('PR_URL')
+          pr_number = os.getenv('PR_NUMBER')
           
           message = ""
           
           if event_name == 'pull_request' and event_action == 'review_requested':
               # Original review request notification
-              message = f"{mentions} *{os.getenv('GITHUB_ACTOR')}* requested your review on <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+              message = f"{mentions} *{actor}* requested your review on <{pr_url}|PR #{pr_number}>."
           
           elif event_name == 'pull_request_review_comment' and event_action == 'created':
               # Inline code comment notification
-              message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* commented on your code in <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+              message = f"{author_mention} *{actor}* commented on your code in <{pr_url}|PR #{pr_number}>."
           
           elif event_name == 'pull_request_review' and event_action == 'submitted':
               if review_state == 'changes_requested':
                   # Changes requested notification for PR author
-                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* requested changes on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+                  message = f"{author_mention} *{actor}* requested changes on your <{pr_url}|PR #{pr_number}>."
               elif review_state == 'approved':
                   # Approval notification for PR author
-                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* approved your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+                  message = f"{author_mention} *{actor}* approved your <{pr_url}|PR #{pr_number}>."
               elif review_state == 'commented':
                   # General review comment notification for PR author
-                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* reviewed and commented on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+                  message = f"{author_mention} *{actor}* reviewed and commented on your <{pr_url}|PR #{pr_number}>."
           
           elif event_name == 'issue_comment' and event_action == 'created':
-              # PR conversation comment notification for PR author
-              message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* commented on your PR conversation in <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+              # For issue comments, we don't have the PR author directly
+              # We'll send a more generic message
+              issue_number = os.getenv('ISSUE_NUMBER')
+              message = f"*{actor}* commented on PR conversation in <{pr_url}|PR #{issue_number}>."
           
           # Only send notification if we have a message to send
           if message:
