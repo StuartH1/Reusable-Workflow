@@ -69,27 +69,42 @@ jobs:
           # Get author's Slack ID if available
           author_mention = f"<@{user_map[pr_author]}>" if pr_author in user_map else pr_author
           
-          # Determine notification type and construct appropriate message
-          notification_type = os.getenv('NOTIFICATION_TYPE', 'review_request')
+          # Determine notification type based on GitHub event
+          event_name = os.getenv('GITHUB_EVENT_NAME')
+          event_action = os.getenv('GITHUB_EVENT_ACTION')
+          review_state = os.getenv('GITHUB_EVENT_REVIEW_STATE')
           
-          if notification_type == 'review_request':
+          message = ""
+          
+          if event_name == 'pull_request' and event_action == 'review_requested':
               # Original review request notification
               message = f"{mentions} *{os.getenv('GITHUB_ACTOR')}* requested your review on <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
-          elif notification_type == 'pr_comment':
-              # New comment notification for PR author
-              comment_author = os.getenv('COMMENT_AUTHOR')
-              message = f"{author_mention} *{comment_author}* commented on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
-          elif notification_type == 'changes_requested':
-              # Changes requested notification for PR author
-              reviewer = os.getenv('REVIEWER')
-              message = f"{author_mention} *{reviewer}* requested changes on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
           
-          # Construct the payload to send to Slack
-          payload = {
-              'text': message,
-              'username': 'GitHub Actions',
-              'icon_emoji': ':octocat:',
-          }
+          elif event_name == 'pull_request_review_comment' and event_action == 'created':
+              # New comment on a specific line in the PR
+              message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* commented on your code in <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+          
+          elif event_name == 'pull_request_review' and event_action == 'submitted':
+              if review_state == 'changes_requested':
+                  # Changes requested notification for PR author
+                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* requested changes on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+              elif review_state == 'approved':
+                  # Approval notification for PR author
+                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* approved your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+              elif review_state == 'commented':
+                  # General review comment notification for PR author
+                  message = f"{author_mention} *{os.getenv('GITHUB_ACTOR')}* reviewed and commented on your <{os.getenv('PR_URL')}|PR #{os.getenv('PR_NUMBER')}>."
+          
+          # Only send notification if we have a message to send
+          if message:
+              # Construct the payload to send to Slack
+              payload = {
+                  'text': message,
+                  'username': 'GitHub Actions',
+                  'icon_emoji': ':octocat:',
+              }
 
-          # Send notification to Slack
-          requests.post(os.getenv('SLACK_WEBHOOK_URL'), json=payload)
+              # Send notification to Slack
+              requests.post(os.getenv('SLACK_WEBHOOK_URL'), json=payload)
+          else:
+              print("No notification type matched, skipping Slack message")
