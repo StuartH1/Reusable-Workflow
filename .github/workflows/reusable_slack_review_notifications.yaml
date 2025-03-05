@@ -24,8 +24,11 @@ jobs:
         uses: 8BitJonny/gh-get-current-pr@3.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Use pull_request head sha if available; otherwise fall back to issue.pull_request head sha
-          sha: ${{ github.event.pull_request.head.sha != null ? github.event.pull_request.head.sha : github.event.issue.pull_request.head.sha }}
+          # For issue_comment events, we need to use a different approach
+          # as github.event.issue.pull_request only contains the URL, not the SHA
+          sha: ${{ github.event_name != 'issue_comment' && github.event.pull_request.head.sha || '' }}
+          # For issue_comment events, we'll use the issue number instead
+          issue-number: ${{ github.event_name == 'issue_comment' && github.event.issue.number || '' }}
 
       - name: Send Slack Notification
         if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
