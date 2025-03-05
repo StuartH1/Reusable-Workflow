@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delay Step
-        run: sleep 20
+        run: sleep 10
         # Delay to ensure GitHub API has processed all events
 
       - name: Get Current PR
