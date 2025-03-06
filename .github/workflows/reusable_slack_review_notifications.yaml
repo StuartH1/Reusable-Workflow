@@ -42,6 +42,7 @@ jobs:
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_OBJECT: ${{ toJSON(github.event.issue) }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         shell: python
         run: |
           import os, json, requests
@@ -183,6 +184,55 @@ jobs:
               
               def __init__(self):
                   self.webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+                  self.github_token = os.getenv('GITHUB_TOKEN')
+                  self.pr_number = os.getenv('PR_NUMBER')
+                  self.repo = os.getenv('GITHUB_REPOSITORY')
+              
+              def _get_thread_ts(self):
+                  """Get thread timestamp from PR description or comments"""
+                  if not self.github_token or not self.pr_number or not self.repo:
+                      return None
+                      
+                  try:
+                      # Get PR details to check for thread_ts in the body
+                      headers = {'Authorization': f'token {self.github_token}'}
+                      pr_url = f"https://api.github.com/repos/{self.repo}/pulls/{self.pr_number}"
+                      pr_response = requests.get(pr_url, headers=headers)
+                      pr_data = pr_response.json()
+                      
+                      # Look for thread_ts in PR body
+                      body = pr_data.get('body', '') or ''
+                      import re
+                      thread_match = re.search(r'<!-- SLACK_THREAD_TS: ([\d\.]+) -->', body)
+                      if thread_match:
+                          return thread_match.group(1)
+                          
+                      return None
+                  except Exception as e:
+                      print(f"Error retrieving thread timestamp: {e}")
+                      return None
+              
+              def _store_thread_ts(self, thread_ts):
+                  """Store thread timestamp in PR description"""
+                  if not self.github_token or not self.pr_number or not self.repo:
+                      return
+                      
+                  try:
+                      headers = {'Authorization': f'token {self.github_token}'}
+                      pr_url = f"https://api.github.com/repos/{self.repo}/pulls/{self.pr_number}"
+                      
+                      # Get current PR body
+                      pr_response = requests.get(pr_url, headers=headers)
+                      pr_data = pr_response.json()
+                      current_body = pr_data.get('body', '') or ''
+                      
+                      # Add thread_ts if not already present
+                      if '<!-- SLACK_THREAD_TS:' not in current_body:
+                          new_body = current_body + f"\n\n<!-- SLACK_THREAD_TS: {thread_ts} -->"
+                          patch_data = {'body': new_body}
+                          requests.patch(pr_url, headers=headers, json=patch_data)
+                  except Exception as e:
+                      print(f"Error storing thread timestamp: {e}")
               
               def send_notification(self, message):
                   """Send notification to Slack"""
@@ -190,15 +240,34 @@ jobs:
                       print("No message to send, skipping Slack notification")
                       return
                   
+                  event_name = os.getenv('GITHUB_EVENT_NAME')
+                  event_action = os.getenv('GITHUB_EVENT_ACTION')
+                  
+                  # Get thread_ts for threading if this is not a review request
+                  thread_ts = None
+                  if not (event_name == 'pull_request' and event_action == 'review_requested'):
+                      thread_ts = self._get_thread_ts()
+                  
                   payload = {
                       'text': message,
                       'username': 'GitHub Actions',
                       'icon_emoji': ':octocat:',
                   }
                   
+                  # Add thread_ts if available for threading
+                  if thread_ts:
+                      payload['thread_ts'] = thread_ts
+                  
                   response = requests.post(self.webhook_url, json=payload)
                   if response.status_code != 200:
                       print(f"Error sending Slack notification: {response.status_code} {response.text}")
+                      return
+                  
+                  # Store thread_ts for future reference if this is the initial message
+                  if not thread_ts and (event_name == 'pull_request' and event_action == 'review_requested'):
+                      response_data = response.json()
+                      if response_data.get('ok') and 'ts' in response_data:
+                          self._store_thread_ts(response_data['ts'])
           
           
           def main():
