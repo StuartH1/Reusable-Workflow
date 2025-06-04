@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 import requests
 
@@ -10,7 +11,6 @@ event_action = os.getenv("GITHUB_EVENT_ACTION")
 actor = os.getenv("GITHUB_ACTOR")
 pr_url = os.getenv("PR_URL")
 pr_number = os.getenv("PR_NUMBER")
-pr_json = os.getenv("PR_JSON")
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
