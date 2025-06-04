@@ -44,6 +44,11 @@ def get_mentions(reviewers: list[dict]) -> str:
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
 
+
+
+print("########################################################")
+print("########################################################")
+print(f"pr_object not in json {pr_object}")
 print("########################################################")
 print("########################################################")
 print(f"pr_info not in json {pr_info}")
