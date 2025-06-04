@@ -12,9 +12,9 @@ jobs:
     name: Ping Reviewer(s)
     runs-on: ubuntu-latest
     steps:
-      - name: Delay Step
-        run: sleep 10
-        # Delay to ensure GitHub API has processed all events
+      # - name: Delay Step
+      #   run: sleep 10
+      # Delay to ensure GitHub API has processed all events
 
       - name: Get Current PR
         id: get_pr
@@ -41,7 +41,7 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
-          PULL_REQUEST_REVIEW_THREAD: ${{ github.event.review}}
+          PULL_REQUEST_REVIEW_THREAD: ${{ toJSON(fromJSON(github.event.review)) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
