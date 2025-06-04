@@ -7,6 +7,7 @@ import requests
 # Parse basic environment variables
 pr_object = json.loads(os.getenv("PR_OBJECT"))
 event_name = os.getenv("GITHUB_EVENT_NAME")
+event_review_state = os.getenv("GITHUB_EVENT_REVIEW_STATE")
 event_action = os.getenv("GITHUB_EVENT_ACTION")
 actor = os.getenv("GITHUB_ACTOR")
 pr_url = os.getenv("PR_URL")
@@ -65,8 +66,6 @@ print(f"pr_number: {pr_number}")
 
 reviewers = pr_object.get("requested_reviewers", [])
 print(f"reviewers: {reviewers}")
-pr_state = pr_object.get("state")
-print(f"pr_state: {pr_state}")
 repo = os.getenv("GITHUB_REPOSITORY")
 print(f"repo: {repo}")
 github_token = os.getenv("GITHUB_TOKEN")
@@ -77,7 +76,11 @@ print("########################################################")
 
 
 
-
+if event_review_state == "changes_requested" :
+    reviewers = pr_object.get("requested_reviewers", [])
+    mentions = get_mentions(reviewers)
+    send_slack(get_message(mentions, actor, "requested changes on"))
+    sys.exit()
 
 if event_name == "pull_request" and event_action == "review_requested":
     # Get reviewers, token, and repo.
@@ -97,7 +100,7 @@ if event_name == "pull_request" and event_action == "review_requested":
             }
             reviews_url = (
                 f"https://api.github.com/repos/{repo}/pulls/{pr_number}/reviews"
-            )
+            ) 
             reviews_response = requests.get(reviews_url, headers=api_headers)
 
             # Check if the review history was fetched successfully
