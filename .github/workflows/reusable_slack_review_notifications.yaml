@@ -39,5 +39,5 @@ jobs:
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_OBJECT: ${{ toJSON(github.event.issue) }}
-        shell: python
-        run: .github/scripts/send_slack_notification.py
+        shell: bash
+        run: python .github/scripts/send_slack_notification.py
