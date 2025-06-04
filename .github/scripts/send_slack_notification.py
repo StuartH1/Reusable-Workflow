@@ -43,6 +43,26 @@ def get_mentions(reviewers: list[dict]) -> str:
 
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
+print("########################################################")
+print("########################################################")
+print("########################################################")
+print(f"event_name: {event_name}")
+print(f"event_action: {event_action}")
+print(f"actor: {actor}")
+print(f"pr_url: {pr_url}")
+print(f"pr_number: {pr_number}")
+
+
+reviewers = pr_object.get("requested_reviewers", [])
+print(f"reviewers: {reviewers}")
+repo = os.getenv("GITHUB_REPOSITORY")
+print(f"repo: {repo}")
+github_token = os.getenv("GITHUB_TOKEN")
+print(f"github_token: {github_token}")
+print("########################################################")
+print("########################################################")
+print("########################################################")
+
 
 
 
@@ -52,7 +72,7 @@ if event_name == "pull_request" and event_action == "review_requested":
     reviewers = pr_object.get("requested_reviewers", [])
     github_token = os.getenv("GITHUB_TOKEN", "")
     repo = os.getenv(
-        "GITHUB_REPOSITORY", ""  # NOTE: this is automatically available on the runner
+        "GITHUB_REPOSITORY", ""  
     )
 
     # Attempt to enhance notifications if a GitHub token is available.
