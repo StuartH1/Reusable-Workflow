@@ -13,7 +13,7 @@ actor = os.getenv("GITHUB_ACTOR")
 pr_url = os.getenv("PR_URL")
 pr_number = os.getenv("PR_NUMBER")
 pr_info = os.getenv("PR_INFO")
-pull_request_review_thread = os.getenv("PULL_REQUEST_REVIEW_THREAD")
+gh_data = os.getenv("GITHUB_DATA")
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
@@ -55,7 +55,6 @@ print("########################################################")
 
 print(f"event_review_state: {event_review_state}")
 print(f"event_name: {event_name}")
-print(f"pull_request_review_thread: {pull_request_review_thread}")
 
 print("########################################################")
 print("########################################################")
