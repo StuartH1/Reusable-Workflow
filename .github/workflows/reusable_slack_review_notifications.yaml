@@ -25,6 +25,10 @@ jobs:
           sha: ${{ github.event_name != 'issue_comment' && github.event.pull_request.head.sha || '' }}
           # For issue_comment events, we'll use the issue number instead
           issue-number: ${{ github.event_name == 'issue_comment' && github.event.issue.number || '' }}
+      - name: Checkout Scripts
+        uses: actions/checkout@v4
+        with:
+          path: .github/scripts
 
       - name: Send Slack Notification
         if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
