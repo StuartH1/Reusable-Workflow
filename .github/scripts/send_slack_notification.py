@@ -5,7 +5,7 @@ import sys
 import requests
 
 # Parse basic environment variables
-pr_object = json.loads(os.getenv("PR_OBJECT", "{}"))
+pr_object = os.getenv("PR_OBJECT")
 event_name = os.getenv("GITHUB_EVENT_NAME")
 event_action = os.getenv("GITHUB_EVENT_ACTION")
 actor = os.getenv("GITHUB_ACTOR")
