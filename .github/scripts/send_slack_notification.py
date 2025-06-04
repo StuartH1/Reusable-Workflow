@@ -10,7 +10,7 @@ event_action = os.getenv("GITHUB_EVENT_ACTION")
 actor = os.getenv("GITHUB_ACTOR")
 pr_url = os.getenv("PR_URL")
 pr_number = os.getenv("PR_NUMBER")
-pr_info = os.getenv("PR_INFO")
+pr_info = json.loads(os.getenv("PR_INFO"))
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
@@ -51,11 +51,7 @@ print("########################################################")
 print(f"pr_object not in json {pr_object}")
 print("########################################################")
 print("########################################################")
-print(f"pr_info not in json {pr_info}")
-print("########################################################")
-print("########################################################")
-
-print(f"json {json.loads(pr_info)}")
+print(f"pr_info {pr_info}")
 print("########################################################")
 print("########################################################")
 
