@@ -5,12 +5,13 @@ import sys
 import requests
 
 # Parse basic environment variables
-pr_object = os.getenv("PR_OBJECT")
+pr_object = json.loads(os.getenv("PR_OBJECT"))
 event_name = os.getenv("GITHUB_EVENT_NAME")
 event_action = os.getenv("GITHUB_EVENT_ACTION")
 actor = os.getenv("GITHUB_ACTOR")
 pr_url = os.getenv("PR_URL")
 pr_number = os.getenv("PR_NUMBER")
+pr_info = os.getenv("PR_INFO")
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
@@ -43,6 +44,15 @@ def get_mentions(reviewers: list[dict]) -> str:
 
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
+
+print("########################################################")
+print("########################################################")
+print("########################################################")
+print(f"pr_info: {pr_info}")
+print("########################################################")
+print("########################################################")
+print("########################################################")
+print("########################################################")
 print("########################################################")
 print("########################################################")
 print("########################################################")
