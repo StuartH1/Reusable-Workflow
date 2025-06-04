@@ -55,6 +55,8 @@ print(f"pr_number: {pr_number}")
 
 reviewers = pr_object.get("requested_reviewers", [])
 print(f"reviewers: {reviewers}")
+pr_state = pr_object.get("state")
+print(f"pr_state: {pr_state}")
 repo = os.getenv("GITHUB_REPOSITORY")
 print(f"repo: {repo}")
 github_token = os.getenv("GITHUB_TOKEN")
