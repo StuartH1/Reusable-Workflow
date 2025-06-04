@@ -54,6 +54,7 @@ print("########################################################")
 print("########################################################")
 
 print(f"event_review_state: {event_review_state}")
+print(f"event_name: {event_name}")
 print(f"event_review_resolved: {event_review_resolved}")
 
 print("########################################################")

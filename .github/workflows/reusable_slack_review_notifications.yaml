@@ -41,7 +41,7 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
-          GITHUB_EVENT_REVIEW_RESOLVED: ${{ github.event.action }}
+          GITHUB_EVENT_REVIEW_RESOLVED: ${{ github.event.pull_request_review_thread.action }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
