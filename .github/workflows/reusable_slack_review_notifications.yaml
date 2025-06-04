@@ -34,6 +34,7 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           PR_URL: ${{ steps.get_pr.outputs.pr_url }}
           PR_NUMBER: ${{ steps.get_pr.outputs.number }}
+          PR_OUTPUT: ${{ steps.get_pr.outputs }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
