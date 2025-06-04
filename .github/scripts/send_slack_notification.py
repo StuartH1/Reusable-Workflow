@@ -45,7 +45,11 @@ def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
 
 
-print(pr_info)
+print("_______________________________________________")
+print(f"pr_info not in json {pr_info}")
+print("_______________________________________________")
+print(f"json {json.loads(pr_info)}")
+print("_______________________________________________")
 
 # if event_name == "pull_request" and event_action == "review_requested":
 #     # Get reviewers, token, and repo.
