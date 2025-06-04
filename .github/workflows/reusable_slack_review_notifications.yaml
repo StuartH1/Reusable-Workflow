@@ -25,6 +25,9 @@ jobs:
 
       - name: Checkout code-control-repo
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/Reusable-Workflow
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send Slack Notification
         if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
