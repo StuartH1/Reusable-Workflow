@@ -40,4 +40,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_OBJECT: ${{ toJSON(github.event.issue) }}
         shell: python
-        run: python .github/scripts/send_slack_notification.py
+        run: .github/scripts/send_slack_notification.py
