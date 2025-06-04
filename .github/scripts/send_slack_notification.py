@@ -44,12 +44,16 @@ def get_mentions(reviewers: list[dict]) -> str:
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
 
-
-print("_______________________________________________")
+print("########################################################")
+print("########################################################")
 print(f"pr_info not in json {pr_info}")
-print("_______________________________________________")
+print("########################################################")
+print("########################################################")
+
 print(f"json {json.loads(pr_info)}")
-print("_______________________________________________")
+print("########################################################")
+print("########################################################")
+
 
 # if event_name == "pull_request" and event_action == "review_requested":
 #     # Get reviewers, token, and repo.
