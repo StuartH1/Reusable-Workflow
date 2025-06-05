@@ -6,6 +6,9 @@ on:
       has_hotfix_label:
         description: "Whether the PR has a hotfix label"
         value: ${{ jobs.pr-auto-labeler.outputs.has_hotfix_label }}
+      has_requested_changes_label:
+        description: "Whether the PR has a requested changes label"
+        value: ${{ jobs.pr-auto-labeler.outputs.has_requested_changes_label }}
   pull_request_review:
     types: [submitted]
   pull_request:
@@ -28,8 +31,13 @@ jobs:
           repository: stuarth1/reusable-workflow
           ref: main
           path: reusable-workflow
-      - name: Add changes requested label
+      - name: Run labeler
         if: github.event.review.state == 'changes_requested'
         uses: actions/labeler@v5
         with:
           configuration-path: "reusable-workflow/.github/.pr-auto-labeler-config.yaml"
+      - name: Set output
+        id: set-output
+        if: contains(steps.run-labeler.outputs.all-labels, 'requested-changes')
+        run: |
+          echo "has_hotfix_label=true" >> "$GITHUB_OUTPUT"
