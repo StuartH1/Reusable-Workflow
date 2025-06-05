@@ -25,4 +25,4 @@ jobs:
         if: github.event.review.state == 'changes_requested'
         uses: actions/labeler@v5
         with:
-          configuration-path: ".github/.pr-auto-labeler-config.yaml"
+          configuration-path: "reusable-workflow/.github/.pr-auto-labeler-config.yaml"
