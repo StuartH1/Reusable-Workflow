@@ -41,14 +41,12 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
-          GITHUB_EVENT: ${{ toJSON(github.event) }}
-          GITHUB_DATA: ${{ toJSON(github) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
 
       - name: Remove requested changes label
-        if: github.event.review.state == 'changes_requested'
+        if: github.event.action == 'review_requested'
         uses: actions/github-script@v7
         with:
           script: |
