@@ -21,6 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request_review' || github.event_name == 'pull_request'
     steps:
+      - name: "Checkout repository: reusable-workflow"
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.WORKFLOWS_SSH_KEY }}
+          repository: stuarth1/reusable-workflow
+          ref: main
+          path: reusable-workflow
       - name: Add changes requested label
         if: github.event.review.state == 'changes_requested'
         uses: actions/labeler@v5
