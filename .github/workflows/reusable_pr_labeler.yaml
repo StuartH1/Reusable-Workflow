@@ -21,7 +21,7 @@ permissions:
 jobs:
   review-label-manager:
     name: PR Auto Labeler
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       has_requested_changes_label: ${{ steps.set-requested-changes-output.outputs.has_requested_changes_label }}
     if: github.event_name == 'pull_request_review' || github.event_name == 'pull_request'
