@@ -6,57 +6,25 @@ on:
       has_hotfix_label:
         description: "Whether the PR has a hotfix label"
         value: ${{ jobs.pr-auto-labeler.outputs.has_hotfix_label }}
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [review_requested, opened]
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  pr-auto-labeler:
-    name: PR Auto Labeler
+  review-label-manager:
+    name: Manage Review Labels
     runs-on: ubuntu-latest
-    outputs:
-      has_hotfix_label: ${{ steps.set-hotfix-output.outputs.has_hotfix_label }}
+    if: github.event_name == 'pull_request_review' || github.event_name == 'pull_request'
     steps:
-      - name: "Checkout repository: bpsolar-dev/bps-code-control"
-        uses: actions/checkout@v3
-        with:
-          ssh-key: ${{ secrets.WORKFLOWS_SSH_KEY }}
-          repository: bpsolar-dev/bps-code-control
-          ref: main
-          path: code-control
-
-      - name: Run labeler
-        id: run-labeler
+      - name: Add changes requested label
+        if: github.event.review.state == 'changes_requested'
         uses: actions/labeler@v5
         with:
-          configuration-path: "code-control/.github/.pr-auto-labeler-config.yml"
-
-      - name: Set outputs
-        id: set-hotfix-output
-        if: contains(steps.run-labeler.outputs.all-labels, 'hotfix')
-        run: |
-          echo "has_hotfix_label=true" >> "$GITHUB_OUTPUT"
-
-  pr-auto-approve:
-    name: PR Auto approval
-    needs: pr-auto-labeler
-    runs-on: ubuntu-latest
-    steps:
-      - name: Auto-approve
-        if: contains(steps.run-labeler.outputs.all-labels, 'hotfix')
-        uses: hmarr/auto-approve-action@v2
-        with:
-          github-token: "${{ secrets.TEST_STU_PAT }}"
-
-  slack-ping:
-    name: PR Auto Labeler
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get Current PR
-        if: contains(steps.run-labeler.outputs.all-labels, 'hotfix')
-        id: get_pr
-        uses: 8BitJonny/gh-get-current-pr@3.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          sha: ${{ github.event.pull_request.head.sha }}
+          configuration-path: ".github/.pr-auto-labeler-config.yml"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: "changes requested"

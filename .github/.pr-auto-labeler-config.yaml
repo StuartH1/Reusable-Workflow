@@ -1,0 +1,11 @@
+feature:
+  - head-branch: ["feature"]
+
+hotfix:
+  - head-branch: ["hotfix"]
+
+requested-changes:
+  - head-branch: ["requested-changes"]
+
+chore :hammer::
+  - head-branch: ["chore"]

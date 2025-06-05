@@ -48,15 +48,10 @@ def get_mentions(reviewers: list[dict]) -> str:
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
 
-print("########################################################")
-
-
-print(f"event_review_state: {event_review_state}")
-print(f"event_name: {event_name}")
-
-print("########################################################")
-
-
+def has_label(label_name: str) -> bool:
+    """Check if the PR has a specific label."""
+    labels = pr_object.get("labels", [])
+    return any(label.get("name") == label_name for label in labels)
 
 if event_review_state == "changes_requested" :
     reviewers = pr_object.get("requested_reviewers")
@@ -67,7 +62,11 @@ if event_review_state == "changes_requested" :
 elif event_action == "review_requested":
     reviewers = pr_object.get("requested_reviewers")
     mentions = get_mentions(reviewers)
-    send_slack(get_message(mentions, actor, "has requested your review"))
+    if has_label("requested-changes"):
+        message = get_message(mentions, actor, "has addressed your requested changes and requested your review again")
+    else:
+        message = get_message(mentions, actor, "has requested your review")
+    send_slack(message)
     sys.exit()
 
 elif event_review_state == "approved":
