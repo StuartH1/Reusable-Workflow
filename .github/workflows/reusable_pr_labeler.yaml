@@ -35,6 +35,7 @@ jobs:
           path: reusable-workflow
 
       - name: Run labeler
+        id: run-labeler
         if: github.event.review.state == 'changes_requested'
         uses: actions/github-script@v7
         with:
