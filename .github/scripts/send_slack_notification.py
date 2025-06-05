@@ -44,6 +44,12 @@ def get_mentions(reviewers: list[dict]) -> str:
         if reviewer.get("login") in user_map
     )
 
+def get_pr_author() -> str:
+    """Get mention for the PR author."""
+    author_login = pr_object.get("user", {}).get("login")
+    if author_login in user_map:
+        return f"<@{user_map[author_login]}>"
+    return ""
 
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
@@ -53,26 +59,26 @@ def has_label(label_name: str) -> bool:
     labels = pr_object.get("labels", [])
     return any(label.get("name") == label_name for label in labels)
 
-if event_review_state == "changes_requested" :
-    reviewers = pr_object.get("requested_reviewers")
-    mentions = get_mentions(reviewers)
-    send_slack(get_message(mentions, actor, "has requested changes to your PR"))
+
+if event_review_state == "changes_requested":
+    pr_author = get_pr_author()
+    send_slack(get_message(pr_author, actor, "has requested changes to your PR"))
     sys.exit()
 
 elif event_action == "review_requested":
-    reviewers = pr_object.get("requested_reviewers")
-    mentions = get_mentions(reviewers)
+    pr_reviewers = pr_object.get("requested_reviewers")
+    slack_pr_reviewers = get_mentions(pr_reviewers)
     if has_label("requested-changes"):
-        message = get_message(mentions, actor, "has addressed your requested changes and requested your review again")
+        message = get_message(slack_pr_reviewers, actor, "has addressed your requested changes and requested your review again")
     else:
-        message = get_message(mentions, actor, "has requested your review")
+        message = get_message(slack_pr_reviewers, actor, "has requested your review")
     send_slack(message)
     sys.exit()
 
 elif event_review_state == "approved":
-    reviewers = pr_object.get("requested_reviewers")
-    mentions = get_mentions(reviewers)
-    message = get_message(mentions, actor, "has approved your PR")
+    # Notify the PR author that their PR was approved
+    pr_author = get_pr_author()
+    message = get_message(pr_author, actor, "has approved your PR")
     send_slack(message)
     sys.exit()
 
