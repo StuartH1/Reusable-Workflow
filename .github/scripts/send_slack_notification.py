@@ -72,6 +72,7 @@ elif event_action == "review_requested":
 elif event_review_state == "approved":
     reviewers = pr_object.get("requested_reviewers")
     mentions = get_mentions(reviewers)
-    send_slack(get_message(mentions, actor, "has approved your PR"))
+    message = f"{mentions} *{actor}* has approved your PR <{pr_url}|PR #{pr_number}>."
+    send_slack(message)
     sys.exit()
 
