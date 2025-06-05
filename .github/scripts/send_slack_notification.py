@@ -27,6 +27,7 @@ user_map = {
     "haydennbps": "U01PNNMJSG0",
     "ClaytonFish": "U03M31SG8TF",
     "zenzenzen": "U04119RP19C",
+    "StuartH23": "U067BG3JC1K",
 }
 
 
@@ -48,31 +49,30 @@ def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
 
 print("########################################################")
-print("########################################################")
-print("########################################################")
-print("########################################################")
-print("########################################################")
+
 
 print(f"event_review_state: {event_review_state}")
 print(f"event_name: {event_name}")
 
 print("########################################################")
-print("########################################################")
-print("########################################################")
-print("########################################################")
 
 
 
 if event_review_state == "changes_requested" :
-    reviewers = pr_object.get("requested_reviewers", [])
+    reviewers = pr_object.get("requested_reviewers")
     mentions = get_mentions(reviewers)
     send_slack(get_message(mentions, actor, "has requested changes to your PR"))
     sys.exit()
 
 elif event_action == "review_requested":
-    reviewers = pr_object.get("requested_reviewers", [])
+    reviewers = pr_object.get("requested_reviewers")
     mentions = get_mentions(reviewers)
     send_slack(get_message(mentions, actor, "has requested your review"))
     sys.exit()
 
+elif event_review_state == "approved":
+    reviewers = pr_object.get("requested_reviewers")
+    mentions = get_mentions(reviewers)
+    send_slack(get_message(mentions, actor, "has approved your PR"))
+    sys.exit()
 
