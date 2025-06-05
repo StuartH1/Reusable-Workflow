@@ -26,5 +26,3 @@ jobs:
         uses: actions/labeler@v5
         with:
           configuration-path: ".github/.pr-auto-labeler-config.yml"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: "changes requested"
