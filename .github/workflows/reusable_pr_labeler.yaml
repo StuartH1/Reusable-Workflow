@@ -20,8 +20,10 @@ permissions:
 
 jobs:
   review-label-manager:
-    name: Manage Review Labels
-    runs-on: ubuntu-latest
+    name: PR Auto Labeler
+    runs-on: ubuntu-24.04
+    outputs:
+      has_requested_changes_label: ${{ steps.set-requested-changes-output.outputs.has_requested_changes_label }}
     if: github.event_name == 'pull_request_review' || github.event_name == 'pull_request'
     steps:
       - name: "Checkout repository: reusable-workflow"
@@ -31,13 +33,15 @@ jobs:
           repository: stuarth1/reusable-workflow
           ref: main
           path: reusable-workflow
+
       - name: Run labeler
         if: github.event.review.state == 'changes_requested'
         uses: actions/labeler@v5
         with:
           configuration-path: "reusable-workflow/.github/.pr-auto-labeler-config.yaml"
-      - name: Set output
-        id: set-output
+
+      - name: Set requested changes output
+        id: set-requested-changes-output
         if: contains(steps.run-labeler.outputs.all-labels, 'requested-changes')
         run: |
-          echo "has_hotfix_label=true" >> "$GITHUB_OUTPUT"
+          echo "has_requested_changes_label=true" >> "$GITHUB_OUTPUT"
