@@ -36,6 +36,7 @@ def send_slack(message: str, ts: Optional[str] = None) -> None:
     payload = {"text": message, "username": "GitHub Actions", "icon_emoji": ":octocat:"}
     if ts:
         payload["thread_ts"] = ts
+    print(payload)
     requests.post(os.getenv("SLACK_WEBHOOK_URL", ""), json=payload)
 
 def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
