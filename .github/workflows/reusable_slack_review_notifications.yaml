@@ -32,7 +32,7 @@ jobs:
       - name: Send Slack Notification
         if: ${{ !contains(steps.get_pr.outputs.pr_labels, 'hotfix') }}
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DM_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEV_NOTIFICATION }}
           PR_OBJECT: ${{ toJSON(github.event.pull_request) }}
           GITHUB_ACTOR: ${{ github.actor }}
           PR_URL: ${{ steps.get_pr.outputs.pr_url }}
