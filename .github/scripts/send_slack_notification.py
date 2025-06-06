@@ -47,7 +47,6 @@ def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
     }
     params = {"channel":{os.getenv("SLACK_CHANNEL_ID", "")}, "limit": 50}
     response = requests.get("https://slack.com/api/conversations.history", headers=headers, params=params)
-    print(response.json())
     parent_message = None
     
     for message in response.json()["messages"]:
