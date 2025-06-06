@@ -58,6 +58,7 @@ def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
         if repo_name not in message.get("text", ""):
             continue
         if "requested your review on" in message.get("text", ""):
+            print(message)
             parent_message = message
             break
     
