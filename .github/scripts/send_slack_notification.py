@@ -111,6 +111,7 @@ elif event_action == "review_requested":
 elif event_review_state == "approved":
     # Notify the PR author that their PR was approved
     pr_author = get_pr_author()
+    parent_message = find_pr_thread(repo_name, pr_number)
     message = get_message(pr_author, actor, "has approved your PR")
-    send_slack(message)
+    send_slack(message, parent_message["ts"] if parent_message else None)
     sys.exit()
