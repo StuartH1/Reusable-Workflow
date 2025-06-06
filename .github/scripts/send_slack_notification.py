@@ -25,6 +25,7 @@ user_map = {
     "haydennbps": "U01PNNMJSG0",
     "ClaytonFish": "U03M31SG8TF",
     "zenzenzen": "U04119RP19C",
+    "StuartH23": "U067BG3JC1K",
 }
 
 
