@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from typing import Optional
 
 import requests
 
@@ -11,7 +12,8 @@ pr_url = os.getenv("PR_URL", "")
 pr_number = os.getenv("PR_NUMBER", "")
 event_action = os.getenv("GITHUB_EVENT_ACTION", "")
 event_review_state = os.getenv("GITHUB_EVENT_REVIEW_STATE")
-pr_author = os.getenv("PR_AUTHOR")
+pr_author = os.getenv("PR_AUTHOR", "")
+repo_name = os.getenv("REPO_NAME", "")
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
@@ -29,10 +31,36 @@ user_map = {
 }
 
 
-def send_slack(message: str) -> None:
+def send_slack(message: str, ts: Optional[str] = None) -> None:
     """Send a message to the configured Slack webhook."""
     payload = {"text": message, "username": "GitHub Actions", "icon_emoji": ":octocat:"}
+    if ts:
+        payload["thread_ts"] = ts
     requests.post(os.getenv("SLACK_WEBHOOK_URL", ""), json=payload)
+
+def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
+    """Find the parent review request message and related messages for this PR."""
+    headers = {
+        "Authorization": f"Bearer {os.getenv("SLACK_BOT_TOKEN", "")}",
+        "Content-Type": "application/json"
+    }
+    params = {"channel":{os.getenv("SLACK_CHANNEL_ID", "")}, "limit": 50}
+    response = requests.get("https://slack.com/api/conversations.history", headers=headers, params=params)
+    
+    parent_message = None
+    
+    for message in response.json()["messages"]:
+        if message.get("bot_id") != bot_id:
+            continue
+        if f"#{pr_number}" not in message.get("text", ""):
+            continue
+        if repo_name not in message.get("text", ""):
+            continue
+        if "requested your review on" in message.get("text", ""):
+            parent_message = message
+            break
+    
+    return parent_message
 
 
 def get_mentions(reviewers: list[dict]) -> str:
@@ -60,13 +88,16 @@ def has_label(label_name: str) -> bool:
 
 if event_review_state == "changes_requested":
     pr_author = get_pr_author()
+    parent_message = find_pr_thread(repo_name, pr_number)
     send_slack(get_message(pr_author, actor, "has requested changes to your PR"))
     sys.exit()
 
 elif event_action == "review_requested":
     pr_reviewers = pr_object.get("requested_reviewers")
     slack_pr_reviewers = get_mentions(pr_reviewers)
+    parent_message = None
     if has_label("requested-changes"):
+        parent_message = find_pr_thread(repo_name, pr_number)
         message = get_message(
             slack_pr_reviewers,
             actor,
@@ -74,7 +105,7 @@ elif event_action == "review_requested":
         )
     else:
         message = get_message(slack_pr_reviewers, actor, "has requested your review")
-    send_slack(message)
+    send_slack(message, parent_message["ts"] if parent_message else None)
     sys.exit()
 
 elif event_review_state == "approved":
