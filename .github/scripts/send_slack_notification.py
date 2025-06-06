@@ -90,7 +90,7 @@ def has_label(label_name: str) -> bool:
 if event_review_state == "changes_requested":
     pr_author = get_pr_author()
     parent_message = find_pr_thread(repo_name, pr_number)
-    send_slack(get_message(pr_author, actor, "has requested changes to your PR"))
+    send_slack(get_message(pr_author, actor, "has requested changes to your PR"), parent_message["ts"] if parent_message else None)
     sys.exit()
 
 elif event_action == "review_requested":
