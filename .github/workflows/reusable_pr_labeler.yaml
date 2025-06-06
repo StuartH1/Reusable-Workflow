@@ -24,7 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_requested_changes_label: ${{ steps.set-requested-changes-output.outputs.has_requested_changes_label }}
-    if: github.event_name == 'pull_request_review' || github.event_name == 'pull_request'
     steps:
       - name: "Checkout repository: reusable-workflow"
         uses: actions/checkout@v4

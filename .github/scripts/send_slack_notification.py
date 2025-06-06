@@ -5,15 +5,13 @@ import sys
 import requests
 
 # Parse basic environment variables
-pr_object = json.loads(os.getenv("PR_OBJECT"))
-event_name = os.getenv("GITHUB_EVENT_NAME")
+pr_object = json.loads(os.getenv("PR_OBJECT", ""))
+actor = os.getenv("GITHUB_ACTOR", "")
+pr_url = os.getenv("PR_URL", "")
+pr_number = os.getenv("PR_NUMBER", "")
+event_action = os.getenv("GITHUB_EVENT_ACTION", "")
 event_review_state = os.getenv("GITHUB_EVENT_REVIEW_STATE")
-event_action = os.getenv("GITHUB_EVENT_ACTION")
-actor = os.getenv("GITHUB_ACTOR")
-pr_url = os.getenv("PR_URL")
-pr_number = os.getenv("PR_NUMBER")
-pr_info = os.getenv("PR_INFO")
-gh_data = os.getenv("GITHUB_DATA")
+pr_author = os.getenv("PR_AUTHOR")
 
 # Mapping from GitHub username to Slack user ID
 user_map = {
@@ -27,32 +25,31 @@ user_map = {
     "haydennbps": "U01PNNMJSG0",
     "ClaytonFish": "U03M31SG8TF",
     "zenzenzen": "U04119RP19C",
-    "StuartH23": "U067BG3JC1K",
 }
 
 
 def send_slack(message: str) -> None:
     """Send a message to the configured Slack webhook."""
     payload = {"text": message, "username": "GitHub Actions", "icon_emoji": ":octocat:"}
-    requests.post(os.getenv("SLACK_WEBHOOK_URL"), json=payload)
+    requests.post(os.getenv("SLACK_WEBHOOK_URL", ""), json=payload)
 
 
 def get_mentions(reviewers: list[dict]) -> str:
     return " ".join(
-        f"<@{user_map[reviewer.get('login')]}>"
+        f"<@{user_map[login]}>"
         for reviewer in reviewers
-        if reviewer.get("login") in user_map
+        if (login := reviewer.get("login")) and login in user_map
     )
+
 
 def get_pr_author() -> str:
     """Get mention for the PR author."""
-    author_login = pr_object.get("user", {}).get("login")
-    if author_login in user_map:
-        return f"<@{user_map[author_login]}>"
-    return ""
+    return f"<@{user_map[pr_author] if pr_author in user_map else pr_author}>"
+
 
 def get_message(mentions: str, actor_name: str, action: str) -> str:
     return f"{mentions} *{actor_name}* {action} <{pr_url}|PR #{pr_number}>."
+
 
 def has_label(label_name: str) -> bool:
     """Check if the PR has a specific label."""
@@ -69,7 +66,11 @@ elif event_action == "review_requested":
     pr_reviewers = pr_object.get("requested_reviewers")
     slack_pr_reviewers = get_mentions(pr_reviewers)
     if has_label("requested-changes"):
-        message = get_message(slack_pr_reviewers, actor, "has addressed your requested changes and requested your review again")
+        message = get_message(
+            slack_pr_reviewers,
+            actor,
+            "has addressed your requested changes and requested your review again",
+        )
     else:
         message = get_message(slack_pr_reviewers, actor, "has requested your review")
     send_slack(message)
@@ -81,4 +82,3 @@ elif event_review_state == "approved":
     message = get_message(pr_author, actor, "has approved your PR")
     send_slack(message)
     sys.exit()
-

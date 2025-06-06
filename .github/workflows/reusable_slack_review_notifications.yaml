@@ -1,4 +1,4 @@
-name: Slack Review Notifications Workflow
+name: Reusable Slack Review Notifications Workflow
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   send_notification:
-    name: Ping Reviewer(s)
+    name: Slack Review Notifications
     runs-on: ubuntu-latest
     steps:
       - name: Delay Step
@@ -37,12 +37,9 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           PR_URL: ${{ steps.get_pr.outputs.pr_url }}
           PR_NUMBER: ${{ steps.get_pr.outputs.number }}
-          PR_INFO: ${{ toJSON(fromJSON(steps.get_pr.outputs.pr)) }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
           GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
 
