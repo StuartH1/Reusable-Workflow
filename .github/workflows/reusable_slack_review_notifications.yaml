@@ -43,6 +43,7 @@ jobs:
           REPO_NAME: ${{ github.repository }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
 
