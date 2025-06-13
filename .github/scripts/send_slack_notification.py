@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 
@@ -14,7 +14,9 @@ event_action = os.getenv("GITHUB_EVENT_ACTION", "")
 event_review_state = os.getenv("GITHUB_EVENT_REVIEW_STATE")
 pr_author = os.getenv("PR_AUTHOR", "")
 repo_name = os.getenv("REPO_NAME", "")
-
+slack_bot_token = os.getenv("SLACK_GH_BOT_TOKEN", "")
+slack_channel_id = os.getenv("SLACK_CHANNEL_ID", "")
+slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
 # Mapping from GitHub username to Slack user ID
 user_map = {
     "Blosil12": "U03LE98UKEF",
@@ -27,7 +29,6 @@ user_map = {
     "haydennbps": "U01PNNMJSG0",
     "ClaytonFish": "U03M31SG8TF",
     "zenzenzen": "U04119RP19C",
-    "StuartH23": "U067BG3JC1K",
 }
 
 
@@ -36,19 +37,23 @@ def send_slack(message: str, ts: Optional[str] = None) -> None:
     payload = {"text": message, "username": "GitHub Actions", "icon_emoji": ":octocat:"}
     if ts:
         payload["thread_ts"] = ts
-    print(payload)
-    requests.post(os.getenv("SLACK_WEBHOOK_URL", ""), json=payload)
+    requests.post(slack_webhook_url, json=payload)
 
-def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
+
+def find_pr_thread(
+    repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"
+) -> dict[str, Any] | None:
     """Find the parent review request message and related messages for this PR."""
     headers = {
-        "Authorization": f"Bearer {os.getenv("SLACK_BOT_TOKEN", "")}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {slack_bot_token}",
+        "Content-Type": "application/json",
     }
-    params = {"channel":{os.getenv("SLACK_CHANNEL_ID", "")}, "limit": 50}
-    response = requests.get("https://slack.com/api/conversations.history", headers=headers, params=params)
+    params: dict[str, Any] = {"channel": slack_channel_id, "limit": 50}
+    response = requests.get(
+        "https://slack.com/api/conversations.history", headers=headers, params=params
+    )
     parent_message = None
-    
+
     for message in response.json()["messages"]:
         if message.get("bot_id") != bot_id:
             continue
@@ -59,8 +64,16 @@ def find_pr_thread(repo_name: str, pr_number: str, bot_id: str = "B06GW8TTWUD"):
         if "has requested your review" in message.get("text", ""):
             parent_message = message
             break
-    
+
     return parent_message
+
+
+def notify_slack_on_main_merge(pr_number: str) -> None:
+    parent_message = find_pr_thread(repo_name, pr_number)
+    send_slack(
+        f"{pr_number} was merged into main",
+        parent_message["ts"] if parent_message else None,
+    )
 
 
 def get_mentions(reviewers: list[dict]) -> str:
@@ -86,12 +99,17 @@ def has_label(label_name: str) -> bool:
     return any(label.get("name") == label_name for label in labels)
 
 
-if event_review_state == "changes_requested":
+if event_action == "closed" and pr_object.get("merged"):
+    notify_slack_on_main_merge(pr_number)
+    sys.exit()
+elif event_review_state == "changes_requested":
     pr_author = get_pr_author()
     parent_message = find_pr_thread(repo_name, pr_number)
-    send_slack(get_message(pr_author, actor, "has requested changes to your PR"), parent_message["ts"] if parent_message else None)
+    send_slack(
+        get_message(pr_author, actor, "has requested changes to your PR"),
+        parent_message["ts"] if parent_message else None,
+    )
     sys.exit()
-
 elif event_action == "review_requested":
     pr_reviewers = pr_object.get("requested_reviewers")
     slack_pr_reviewers = get_mentions(pr_reviewers)
@@ -105,11 +123,13 @@ elif event_action == "review_requested":
         )
     else:
         message = get_message(slack_pr_reviewers, actor, "has requested your review")
+
     send_slack(message, parent_message["ts"] if parent_message else None)
     sys.exit()
-
 elif event_review_state == "approved":
     # Notify the PR author that their PR was approved
+    if has_label("hotfix"):
+        sys.exit()
     pr_author = get_pr_author()
     parent_message = find_pr_thread(repo_name, pr_number)
     message = get_message(pr_author, actor, "has approved your PR")
