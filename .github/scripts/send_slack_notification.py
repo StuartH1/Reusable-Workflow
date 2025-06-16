@@ -69,11 +69,7 @@ def find_pr_thread(
 
 
 def notify_slack_on_main_merge(pr_number: str) -> None:
-    parent_message = find_pr_thread(repo_name, pr_number)
-    send_slack(
-        f"{pr_number} was merged into main",
-        parent_message["ts"] if parent_message else None,
-    )
+    send_slack(f"{pr_number} was merged into main")
 
 
 def get_mentions(reviewers: list[dict]) -> str:
