@@ -69,8 +69,9 @@ def find_pr_thread(
 
 
 def notify_slack_on_main_merge(pr_number: str) -> None:
+    branch = pr_object.get("base", {}).get("ref", "main")  # fallback to 'main'
     send_slack(
-        f":tada: <{pr_url}|PR #{pr_number}> was merged into *main* by *{actor}* (originally opened by *{pr_author}*)."
+        f":tada: <{pr_url}|PR #{pr_number}> was merged into *{branch}* by *{actor}*."
     )
 
 
