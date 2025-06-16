@@ -27,7 +27,7 @@ jobs:
       - name: Checkout code-control-repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/Reusable-Workflow
+          repository: StuartH1/Reusable-Workflow
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send Slack Notification
@@ -59,22 +59,3 @@ jobs:
               issue_number: context.issue.number,
               name: 'requested-changes'
             });
-
-  notify-slack-on-main-merge:
-    name: Notify Slack of PR merge to main
-    runs-on: ubuntu-24.04
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
-    steps:
-      - name: Notify Slack of PR merge to main
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_DM_URL }}
-          PR_OBJECT: ${{ toJSON(github.event.pull_request) }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_EVENT_ACTION: ${{ github.event.action }}
-          GITHUB_EVENT_REVIEW_STATE: ${{ github.event.review.state }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-        shell: bash
-        run: python .github/scripts/send_slack_notification.py
