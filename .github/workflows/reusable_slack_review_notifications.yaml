@@ -44,7 +44,7 @@ jobs:
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_DM_URL }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels) }}
-          PR_COMMENT: ${{ toJSON(github.event.issue.pull_request) }}
+          PR_COMMENT: ${{ github.event.comment }}
           COMMENT_BODY: ${{ github.event.comment.body }}
         shell: bash
         run: python .github/scripts/send_slack_notification.py
