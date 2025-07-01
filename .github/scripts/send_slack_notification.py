@@ -118,7 +118,7 @@ elif event_action == "review_requested":
     slack_pr_reviewers = get_mentions(pr_reviewers)
     parent_message = None
     if has_label("requested-changes"):
-        parent_message = find_pr_thread(repo_name, pr_number)
+        # parent_message = find_pr_thread(repo_name, pr_number)
         message = get_message(
             slack_pr_reviewers,
             actor,
