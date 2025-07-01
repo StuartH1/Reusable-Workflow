@@ -132,13 +132,6 @@ elif comment_body:
     )
     print("PR author commented")
     sys.exit()
-else:
-    print("no label")
-    parent_message = find_pr_thread(repo_name, pr_number)
-    message = get_message(slack_pr_reviewers, actor, "has requested your review")
-
-    send_slack(message, parent_message["ts"] if parent_message else None)
-    sys.exit()
 elif event_review_state == "approved":
     # Notify the PR author that their PR was approved
     if has_label("hotfix"):
@@ -147,5 +140,12 @@ elif event_review_state == "approved":
     parent_message = find_pr_thread(repo_name, pr_number)
     print("approved")
     message = get_message(pr_author, actor, "has approved your PR")
+    send_slack(message, parent_message["ts"] if parent_message else None)
+    sys.exit()
+else:
+    print("no label")
+    parent_message = find_pr_thread(repo_name, pr_number)
+    message = get_message(slack_pr_reviewers, actor, "has requested your review")
+
     send_slack(message, parent_message["ts"] if parent_message else None)
     sys.exit()
