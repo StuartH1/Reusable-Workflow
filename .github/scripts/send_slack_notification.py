@@ -103,15 +103,6 @@ if event_action == "closed" and pr_object.get("merged"):
     notify_slack_on_main_merge(pr_number)
     print("PR merged into main")
     sys.exit()
-elif comment_body:
-    pr_author = get_pr_author()
-    parent_message = find_pr_thread(repo_name, pr_number)
-    send_slack(
-        get_message(pr_author, actor, "has commented on your "),
-        parent_message["ts"] if parent_message else None,
-    )
-    print("PR author commented")
-    sys.exit()
 elif event_review_state == "changes_requested":
     pr_author = get_pr_author()
     parent_message = find_pr_thread(repo_name, pr_number)
@@ -133,10 +124,18 @@ elif event_action == "review_requested":
             actor,
             "has addressed your requested changes and requested your review again",
         )
-    else:
-        print("no label")
-        parent_message = find_pr_thread(repo_name, pr_number)
-        message = get_message(slack_pr_reviewers, actor, "has requested your review")
+elif comment_body:
+    pr_author = get_pr_author()
+    send_slack(
+        get_message(pr_author, actor, "has commented on your "),
+        parent_message["ts"] if parent_message else None,
+    )
+    print("PR author commented")
+    sys.exit()
+else:
+    print("no label")
+    parent_message = find_pr_thread(repo_name, pr_number)
+    message = get_message(slack_pr_reviewers, actor, "has requested your review")
 
     send_slack(message, parent_message["ts"] if parent_message else None)
     sys.exit()
