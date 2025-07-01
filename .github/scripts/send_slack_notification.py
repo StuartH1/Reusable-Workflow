@@ -125,11 +125,7 @@ elif event_action == "review_requested":
             "has addressed your requested changes and requested your review again",
         )
 elif comment_body:
-    pr_author = get_pr_author()
-    send_slack(
-        get_message(pr_author, actor, "has commented on your "),
-        parent_message["ts"] if parent_message else None,
-    )
+    send_slack(get_message(pr_author, actor, "has commented on "))
     print("PR author commented")
     sys.exit()
 elif event_review_state == "approved":
