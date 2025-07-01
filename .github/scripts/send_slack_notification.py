@@ -17,6 +17,7 @@ repo_name = os.getenv("REPO_NAME", "")
 slack_bot_token = os.getenv("SLACK_GH_BOT_TOKEN", "")
 slack_channel_id = os.getenv("SLACK_CHANNEL_ID", "")
 slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
+comment_body = os.getenv("COMMENT_BODY", "")
 # Mapping from GitHub username to Slack user ID
 user_map = {
     "Blosil12": "U03LE98UKEF",
@@ -102,6 +103,15 @@ if event_action == "closed" and pr_object.get("merged"):
     notify_slack_on_main_merge(pr_number)
     print("PR merged into main")
     sys.exit()
+elif comment_body:
+    pr_author = get_pr_author()
+    parent_message = find_pr_thread(repo_name, pr_number)
+    send_slack(
+        get_message(pr_author, actor, "has commented on your "),
+        parent_message["ts"] if parent_message else None,
+    )
+    print("PR author commented")
+    sys.exit()
 elif event_review_state == "changes_requested":
     pr_author = get_pr_author()
     parent_message = find_pr_thread(repo_name, pr_number)
@@ -125,6 +135,7 @@ elif event_action == "review_requested":
         )
     else:
         print("no label")
+        parent_message = find_pr_thread(repo_name, pr_number)
         message = get_message(slack_pr_reviewers, actor, "has requested your review")
 
     send_slack(message, parent_message["ts"] if parent_message else None)
