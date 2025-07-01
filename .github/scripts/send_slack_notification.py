@@ -105,10 +105,8 @@ if event_action == "closed" and pr_object.get("merged"):
     sys.exit()
 elif event_review_state == "changes_requested":
     pr_author = get_pr_author()
-    parent_message = find_pr_thread(repo_name, pr_number)
     send_slack(
         get_message(pr_author, actor, "has requested changes to your PR"),
-        parent_message["ts"] if parent_message else None,
     )
     print("PR author requested changes")
     sys.exit()
