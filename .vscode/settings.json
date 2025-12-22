@@ -1,5 +1,5 @@
 {
     "editor.wordWrap": "on",
     "yaml.schemaStore.enable": true,
-    "python.languageServer": "Pylance"
+    "python.languageServer": "None"
 }

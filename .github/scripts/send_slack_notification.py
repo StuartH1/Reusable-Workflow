@@ -6,6 +6,8 @@ from typing import Any, Optional
 import requests
 
 # Parse basic environment variables
+github_event = os.getenv("GITHUB_EVENT", "")
+print(f"GITHUB_EVENT: {github_event}")
 pr_object = json.loads(os.getenv("PR_OBJECT", ""))
 actor = os.getenv("GITHUB_ACTOR", "")
 pr_url = os.getenv("PR_URL", "")
