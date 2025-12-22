@@ -33,6 +33,7 @@ user_map = {
     "ClaytonFish": "U03M31SG8TF",
     "zenzenzen": "U04119RP19C",
 }
+# Print the event objects
 
 
 def send_slack(message: str, ts: Optional[str] = None) -> None:
